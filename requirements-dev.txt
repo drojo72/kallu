@@ -1,5 +1,8 @@
 -r requirements.txt
-pytest>=8.0
-pytest-asyncio>=0.23
-ruff>=0.6
-mypy>=1.11
+pytest>=9.1.1
+ruff>=0.15.22
+mypy_extensions>==1.1.0
+pytest-asyncio>=1.4.0
+mypy>==2.4.0
+ast-serialize>==0.13.1
+librt>==0.16.0
