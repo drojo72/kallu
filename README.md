@@ -25,6 +25,8 @@ KALLU no es solo un chat con un LLM. Es un sistema que decide *cuándo* y *si* r
 - Ejecución en entorno aislado (venv).
 
 ## Arquitectura (visión actual)
+
+'''
 Usuario / Kate (LSP)
 ↓
 KALLU Core (Python)
@@ -33,6 +35,7 @@ KALLU Core (Python)
 ├── Vector Store (pgvector)
 ├── Gestión de proyectos & scopes
 └── Proveedores LLM (OpenRouter, Gemini, locales…)
+'''
 
 ## Estado del proyecto
 
