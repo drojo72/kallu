@@ -4,7 +4,7 @@
 
 **Asistente de IA seguro y modular para el editor Kate, que piensa antes de gastar tokens.**
 
-> **Estado: pre-0.1.0. Se reconstruye desde cero con diseño de seguridad primero.** Existe un prototipo anterior que se porta módulo por módulo. Las APIs, comandos y configuración cambiarán. Aún no se puede instalar desde PyPI. Modelo de seguridad: ver [SECURITY.md](SECURITY.md).
+> **Estado: pre-0.1.0.** Se reconstruye desde cero con diseño de seguridad primero. Existe un prototipo anterior que se porta módulo por módulo. Las APIs, comandos y configuración cambiarán. Aún no se puede instalar desde PyPI. Modelo de seguridad: ver [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -51,7 +51,7 @@ Kellu lleva asistencia de IA a [Kate](https://kate-editor.org/) sin una pila gr�
   * posterior a 0.1.0
 ```
 
-El núcleo no tiene interfaz ni efectos secundarios al importarse. Frontends, proveedores y almacenes son adaptadores reemplazables. Dirección de dependencias: `frontends → core/tools → providers/sandbox/security`.
+El núcleo no tiene interfaz ni efectos secundarios al importarse. Frontends, proveedores y almacenes son adaptadores reemplazables. Dirección de dependencias: `frontends → core → tools → sandbox, security → common`, con `providers` y `projects` también por debajo de `core` (ver [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)). Un test lo hace cumplir.
 
 ## Seguridad de un vistazo
 
@@ -73,13 +73,53 @@ Detalles, modelo de amenazas y límites: [SECURITY.md](SECURITY.md).
 
 Los proyectos se descubren bajo una raíz configurable y se agrupan en macro-proyecto, repositorio y subproyecto. Cada scope puede definir reglas, proveedores preferidos, límites de recursos y un modo de privacidad (por ejemplo, solo local).
 
+## Agentes y extensiones
+
+Kellu hablará los protocolos abiertos para agentes y herramientas (ACP y MCP, entre 0.3.0 y 0.5.0). Los agentes y servidores MCP, propios o de terceros, se tratan como **extensiones no confiables**: corren como procesos en sandbox con entorno depurado, se habilitan solo mediante una lista de permitidos explícita por servidor, y cada herramienta que exponen necesita un nivel de riesgo declarado. No hay código por agente dentro del núcleo; un único cliente genérico los atiende a todos.
+
+Ideas en evaluación, como repositorios separados y fuera de 0.1.0:
+
+- **kellu-crawler**: crawler web enfocado a proyectos e investigación
+- **kellu-ocr**: extracción de texto (OCR) para PDF escaneados antiguos y documentos similares
+
+Los resultados se entregarían a la terminal o como archivos; la entrega dentro de Kate depende de lo que su cliente LSP pueda mostrar.
+
+## Estructura del proyecto
+
+```
+kellu/
+├── LICENSE  README.md  README.es.md  SECURITY.md  CHANGELOG.md  pyproject.toml
+├── src/kellu/
+│   ├── __app__.py          # identidad: nombre, versión, esquema del keyring (fuente única)
+│   ├── cli.py  doctor.py   # puntos de entrada: kellu, doctor, keys, lsp...
+│   ├── common/             # errores, rutas XDG (solo biblioteca estándar)
+│   ├── security/           # vault, redacción, deny globs, permisos y política
+│   ├── sandbox/            # interfaz, backend bubblewrap, perfiles
+│   ├── providers/          # compatible OpenAI, Google (runtimes locales después)
+│   ├── projects/           # descubrimiento, detección de stack, scopes
+│   ├── tools/              # registro con nivel de riesgo obligatorio; archivos, shell, git
+│   ├── core/               # config, router, contexto, sesiones (sin efectos al importar)
+│   └── frontends/          # REPL, LSP (después: gateway, ACP, servidor MCP)
+├── tests/                  # unit/ y sandbox/
+├── docs/                   # ARCHITECTURE.md y notas de diseño
+└── packaging/              # entrada de escritorio
+```
+
+Los paquetes se añaden **cuando empieza su hito**, no antes: `memory/` (0.4.0, SQLite y pgvector opcional), la cascada de decisión como `core/cascade.py` (0.2.0 a 0.4.0) y un cliente MCP dentro de `tools/` (0.5.0). Un test exige que cada directorio sea una capa declarada y que las capas solo importen hacia abajo.
+
 ## Inicio rápido
 
 > Los comandos describen la **interfaz objetivo** y pueden cambiar antes de 0.1.0.
 
-Requisitos (Linux primero): Python 3.11+, `libsecret-tools` (`secret-tool`) y `bubblewrap`. En Debian o Ubuntu: `sudo apt install libsecret-tools bubblewrap`. Algunas distribuciones restringen los user namespaces sin privilegios (por ejemplo Ubuntu 24.04); `kellu doctor` te dice si el sandbox puede ejecutarse.
+Requisitos (Linux primero): Python 3.11+, `libsecret-tools` (`secret-tool`) y `bubblewrap`. En Debian o Ubuntu:
 
-```bash
+```
+sudo apt install libsecret-tools bubblewrap
+```
+
+Algunas distribuciones restringen los user namespaces sin privilegios (por ejemplo Ubuntu 24.04); `kellu doctor` te dice si el sandbox puede ejecutarse.
+
+```
 # Una vez publicado
 pipx install kellu
 
@@ -170,7 +210,6 @@ El proyecto es joven y la arquitectura aún se mueve, así que abre un issue ant
 ## Licencia
 
 MIT. Ver [LICENSE](LICENSE).
-<!-- TODO: agregar el archivo LICENSE. -->
 
 ## Aviso legal
 

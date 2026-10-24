@@ -9,7 +9,7 @@ Kellu is an AI assistant that can read your code, call external model providers 
 Please **do not open a public issue** for security problems.
 
 - Use GitHub's private vulnerability reporting (*Security → Report a vulnerability*) on this repository, or
-- email `<security-contact-address>`. <!-- TODO: set a dedicated contact address before publishing. -->
+- email `<security-contact-address>`.
 
 Include the affected version or commit, steps to reproduce, the impact you expect, and whether you want credit. This is a small, maintained-by-one-person project: we aim to acknowledge reports within 7 days and to agree on a disclosure timeline with you. These are goals, not guarantees.
 
@@ -35,6 +35,7 @@ Include the affected version or commit, steps to reproduce, the impact you expec
 |---|---|
 | Kellu core (keys, network, policy) | Trusted |
 | Sandboxed tool processes | Untrusted execution |
+| Extensions (agents, MCP servers) | Untrusted execution and untrusted data |
 | Model providers | External: they see what you send them |
 | Repository, web and stored content | Untrusted **data**, never instructions |
 | The user | Trusted principal |
@@ -48,10 +49,11 @@ Include the affected version or commit, steps to reproduce, the impact you expec
 | T3 | **Secret theft by tools** (reading `~/.ssh`, keyring, environment) | Sandbox with no access to home secrets or the keyring bus, environment allowlist, secrets never in argv, env or logs. |
 | T4 | **Destructive actions** (deleting a repository, force-push, mass edits) | Risk levels, typed confirmation for destructive tools, git and `gh` writes executed on the host by the core, never by a model-controlled process. |
 | T5 | **Path traversal and symlink escapes** in file tools | Paths resolved with `realpath` against a scope root, symlinks not followed outside it, deny globs, checks made on opened file descriptors where possible. |
-| T6 | **Malicious or compromised dependency** | Core on the standard library, optional extras, pinned versions (hashes for releases), `pip-audit` in CI, minimal dependency changes reviewed. |
+| T6 | **Malicious or compromised dependency** | Core on the standard library where practical, optional extras, pinned versions (hashes for releases), `pip-audit` in CI, minimal dependency changes reviewed. |
 | T7 | **Malicious or malformed provider response** (forged tool calls) | Tool calls validated against schema and policy before any execution. Model output is never executed directly. |
 | T8 | **Other local users or processes** | Secrets in the OS keyring. State directories created with mode `0700`, files `0600`. |
 | T9 | **Secrets leaking through logs and session history** | Redaction before writing, truncated content, no raw provider payloads by default. |
+| T10 | **Untrusted extensions** (agents and MCP servers: tool poisoning, malicious tool descriptions, exfiltration) | Run as sandboxed processes with a scrubbed environment. Explicit per-server allowlist. Tool descriptions and outputs are untrusted data. Every tool has a declared risk level. No access to `provider`, `infra` or `db` secrets unless granted per server. Network only through the `network` profile, with confirmation. |
 
 ### Out of scope
 
@@ -59,6 +61,7 @@ Include the affected version or commit, steps to reproduce, the impact you expec
 - A malicious user acting with their own privileges.
 - Vulnerabilities inside the sandbox backend or the kernel itself (we configure bubblewrap correctly; we do not audit it).
 - How a provider stores or uses the data you choose to send it. Choose providers accordingly.
+- Cryptographic guarantees beyond the platform's. Kellu does not implement its own cryptography: transport security comes from the platform TLS stack, and secret storage from the OS keyring. Post-quantum protection therefore depends on those components and on your providers; we will track support rather than promise it.
 
 ## Security principles
 
@@ -139,6 +142,7 @@ Limits you should know:
 | M6 | LSP and REPL honoring deny globs and redaction |
 | 0.2.0 | Agent loop gated by the policy engine; injection-oriented tests |
 | 0.4.0 | Memory store with acceptance criteria, expiry and "from memory" labeling |
+| 0.5.0 | MCP client with per-server allowlist, sandboxing and risk mapping; extension tool descriptions treated as untrusted |
 
 ## Hardening checklist for users
 
