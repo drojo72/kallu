@@ -9,7 +9,7 @@ Kellu is an AI assistant that can read your code, call external model providers 
 Please **do not open a public issue** for security problems.
 
 - Use GitHub's private vulnerability reporting (*Security → Report a vulnerability*) on this repository, or
-- email `<security-contact-address>`.
+- email `drojo72@gmail.com`.
 
 Include the affected version or commit, steps to reproduce, the impact you expect, and whether you want credit. This is a small, maintained-by-one-person project: we aim to acknowledge reports within 7 days and to agree on a disclosure timeline with you. These are goals, not guarantees.
 
